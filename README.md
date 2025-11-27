@@ -36,7 +36,7 @@ From calorie targets to full meal recommendations, CHARM adapts to individual ne
 ---
 
 ## 📁 Project Structure
-
+```
 CHARM/
 │
 ├── backend/
@@ -54,7 +54,7 @@ CHARM/
 │
 ├── README.md
 └── .gitignore
-
+```
 ---
 ## 🛠️ Tech Stack
 
