@@ -1,27 +1,105 @@
-# AI Diet & Nutrition Recommender (Deep Learning)
-This project implements a simple, extendable AI-backed weekly diet & workout recommender tailored to the provided recipe dataset.
+# 🧬 CHARM — Care, Health & AI-based Regimen Manager
+An intelligent AI-powered diet, nutrition & lifestyle recommendation system.
 
-## What's included
-- `backend/` — FastAPI backend with data preprocessing, a simple PyTorch model, training script, and endpoints for inference.
-- `frontend/` — Minimal React app (Vite-compatible) that posts user inputs and displays a generated 7-day diet + workout plan.
-- The backend uses the dataset at: **/mnt/data/healthy_recipes_augmented.xlsx** (already uploaded).
+---
 
-## Quick Start (VS Code)
-1. Open two terminals in VS Code.
-2. Backend:
-   - `cd backend`
-   - Create a virtualenv: `python -m venv .venv && source .venv/bin/activate` (on Windows: `.\.venv\Scripts\activate`)
-   - `pip install -r requirements.txt`
-   - Train a quick model (optional, creates `model.pt`): `python train.py`
-   - Run server: `uvicorn app:app --reload --port 8000`
-3. Frontend:
-   - `cd frontend`
-   - `npm install`
-   - `npm run dev` (or `npm start` if using CRA; this project uses a simple setup — see package.json)
-4. Open the frontend in your browser (usually http://localhost:5173) and test.
+## 🌟 Overview
 
-## Notes / Next steps
-- The provided model is intentionally simple (feed-forward) and trained using heuristic labels derived from user-goal/food suitability columns.
-- For production: use a larger model, proper cross-validation, more features (user history), data augmentation, and secure deployment (HTTPS, authentication).
+**CHARM** (Care, Health & AI-based Regimen Manager) is an AI-driven health companion that generates personalized diet, nutrition, and lifestyle plans using user health data.  
+From calorie targets to full meal recommendations, CHARM adapts to individual needs and goals.
 
-Dataset path used by backend: `/mnt/data/healthy_recipes_augmented.xlsx`\n
+---
+
+## 🚀 Features
+
+### 🥗 AI Diet Recommendations
+- Tailored meal plans based on BMI, activity level, age, gender, and goals.
+- Nutritional breakdown including macros and key micronutrients.
+
+### 🏋️ Fitness & Activity Suggestions
+- Daily fitness recommendations aligned with user goals (weight loss, maintenance, gain).
+
+### ⚕️ Health Metrics Analysis
+- BMI calculation  
+- Calorie requirement estimation  
+- Nutrient insights
+
+### 🤖 Machine Learning Integration
+- ML models generate smart food suggestions.
+- Ideal for training and optimizing diet plans.
+
+### 🌐 Full-Stack Architecture
+- Frontend (React/Streamlit)
+- Backend (Python/FastAPI or Flask)
+- Database for user history
+
+---
+
+## 📁 Project Structure
+
+CHARM/
+│
+├── backend/
+│ ├── main.py
+│ ├── models/
+│ ├── utils/
+│ ├── requirements.txt
+│ └── ...
+│
+├── frontend/
+│ ├── public/
+│ ├── src/
+│ ├── package.json
+│ └── ...
+│
+├── README.md
+└── .gitignore
+
+---
+## 🛠️ Tech Stack
+
+### Backend
+- Python  
+- FastAPI / Flask  
+- ML: scikit-learn / PyTorch / TensorFlow  
+ y
+### Frontend
+- React / Streamlit  
+- Tailwind / Material UI  
+
+### Database
+- MongoDB / PostgreSQL / Firebase  
+
+### 📌 Usage
+Launch the app in the browser.
+
+Enter your health details & goals.
+
+Receive AI-generated diet & lifestyle recommendations.
+
+Track and update your regimen anytime.
+
+### 📈 Future Enhancements
+Wearable device integration
+
+Recipe generator based on local cuisine
+
+AI nutrition chatbot
+
+Food image calorie estimation
+
+Multilingual support
+
+### 🤝 Contributing
+Contributions are welcome!
+Fork the repo → Create a branch → Submit a pull request.
+
+### 🛡️ License
+This project is licensed under the MIT License.
+
+❤️ Acknowledgments
+OpenAI and ML frameworks
+
+USDA / FoodData Central nutrition datasets
+
+Community contributors
