@@ -10,20 +10,33 @@ export default function Form({ onResult }) {
     deficiency: 'none',
     chronic: 'none',
     cuisine_pref: '',
-    food_type: 'none'   // added correctly
+    food_type: 'none'
   })
 
   const submit = async (e) => {
     e.preventDefault()
 
-    const resp = await fetch('http://localhost:8000/generate_plan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(state)
-    })
+    try {
+      const resp = await fetch(
+        'https://charm-care-health-ai-based-regimen.onrender.com/generate_plan',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state),
+        }
+      )
 
-    const data = await resp.json()
-    onResult(data)
+      if (!resp.ok) {
+        console.error("Backend error:", resp.status)
+        return
+      }
+
+      const data = await resp.json()
+      onResult(data)
+
+    } catch (err) {
+      console.error("Network error:", err)
+    }
   }
 
   return (
@@ -60,7 +73,7 @@ export default function Form({ onResult }) {
       <label>Activity Level</label>
       <input
         type="number"
-        step="0.5"
+        step="0.25"
         value={state.activity_level}
         onChange={e => setState({ ...state, activity_level: parseFloat(e.target.value) })}
       />
@@ -115,7 +128,7 @@ export default function Form({ onResult }) {
         value={state.food_type}
         onChange={(e) => setState({ ...state, food_type: e.target.value })}
       >
-        <option value="None">No Preference</option>
+        <option value="none">No Preference</option>
         <option value="Vegetarian">Vegetarian</option>
         <option value="Vegan">Vegan</option>
         <option value="Non-Vegetarian">Non-Vegetarian</option>
