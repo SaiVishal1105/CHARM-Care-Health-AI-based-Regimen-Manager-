@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState } from "react";
 
 export default function Form({ onResult }) {
   const [state, setState] = useState({
@@ -6,38 +6,37 @@ export default function Form({ onResult }) {
     height_cm: 170,
     weight_kg: 70,
     activity_level: 1.55,
-    goal: 'loss',
-    deficiency: 'none',
-    chronic: 'none',
-    cuisine_pref: '',
-    food_type: 'none'
-  })
+    goal: "loss",
+    deficiency: "none",
+    chronic: "none",
+    cuisine_pref: "",
+    food_type: "none"
+  });
 
   const submit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     try {
       const resp = await fetch(
-        'https://charm-care-health-ai-based-regimen.onrender.com/generate_plan',
+        "https://charm-care-health-ai-based-regimen.onrender.com/generate_plan",
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(state),
         }
-      )
+      );
 
       if (!resp.ok) {
-        console.error("Backend error:", resp.status)
-        return
+        throw new Error("Backend error");
       }
 
-      const data = await resp.json()
-      onResult(data)
-
+      const data = await resp.json();
+      onResult(data);
     } catch (err) {
-      console.error("Network error:", err)
+      console.error("Failed:", err);
+      alert("⚠️ Failed to fetch plan. Backend unreachable.");
     }
-  }
+  };
 
   return (
     <form onSubmit={submit}>
@@ -47,7 +46,9 @@ export default function Form({ onResult }) {
           <input
             type="number"
             value={state.age}
-            onChange={e => setState({ ...state, age: parseInt(e.target.value) })}
+            onChange={(e) =>
+              setState({ ...state, age: parseInt(e.target.value) })
+            }
           />
         </div>
 
@@ -56,7 +57,9 @@ export default function Form({ onResult }) {
           <input
             type="number"
             value={state.height_cm}
-            onChange={e => setState({ ...state, height_cm: parseFloat(e.target.value) })}
+            onChange={(e) =>
+              setState({ ...state, height_cm: parseFloat(e.target.value) })
+            }
           />
         </div>
 
@@ -65,7 +68,9 @@ export default function Form({ onResult }) {
           <input
             type="number"
             value={state.weight_kg}
-            onChange={e => setState({ ...state, weight_kg: parseFloat(e.target.value) })}
+            onChange={(e) =>
+              setState({ ...state, weight_kg: parseFloat(e.target.value) })
+            }
           />
         </div>
       </div>
@@ -73,9 +78,11 @@ export default function Form({ onResult }) {
       <label>Activity Level</label>
       <input
         type="number"
-        step="0.25"
+        step="0.5"
         value={state.activity_level}
-        onChange={e => setState({ ...state, activity_level: parseFloat(e.target.value) })}
+        onChange={(e) =>
+          setState({ ...state, activity_level: parseFloat(e.target.value) })
+        }
       />
 
       <div className="row">
@@ -83,7 +90,7 @@ export default function Form({ onResult }) {
           <label>Goal</label>
           <select
             value={state.goal}
-            onChange={e => setState({ ...state, goal: e.target.value })}
+            onChange={(e) => setState({ ...state, goal: e.target.value })}
           >
             <option value="loss">Weight Loss</option>
             <option value="gain">Weight Gain</option>
@@ -95,7 +102,7 @@ export default function Form({ onResult }) {
           <label>Deficiency</label>
           <select
             value={state.deficiency}
-            onChange={e => setState({ ...state, deficiency: e.target.value })}
+            onChange={(e) => setState({ ...state, deficiency: e.target.value })}
           >
             <option value="none">None</option>
             <option value="iron">Iron</option>
@@ -108,7 +115,7 @@ export default function Form({ onResult }) {
           <label>Chronic</label>
           <select
             value={state.chronic}
-            onChange={e => setState({ ...state, chronic: e.target.value })}
+            onChange={(e) => setState({ ...state, chronic: e.target.value })}
           >
             <option value="none">None</option>
             <option value="diabetes">Diabetes</option>
@@ -120,7 +127,9 @@ export default function Form({ onResult }) {
       <label>Cuisine Preference</label>
       <input
         value={state.cuisine_pref}
-        onChange={e => setState({ ...state, cuisine_pref: e.target.value })}
+        onChange={(e) =>
+          setState({ ...state, cuisine_pref: e.target.value })
+        }
       />
 
       <label>Food Type</label>
@@ -136,5 +145,5 @@ export default function Form({ onResult }) {
 
       <button type="submit">Generate 7-day Plan</button>
     </form>
-  )
+  );
 }
