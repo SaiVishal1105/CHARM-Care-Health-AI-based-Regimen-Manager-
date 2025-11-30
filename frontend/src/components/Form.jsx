@@ -14,44 +14,39 @@ export default function Form({ onResult }) {
   });
 
   const submit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const payload = {
-      age: Number(state.age),
-      height_cm: Number(state.height_cm),
-      weight_kg: Number(state.weight_kg),
-      activity_level: Number(state.activity_level),
-      goal: state.goal,
-      deficiency: state.deficiency,
-      chronic: state.chronic,
-      cuisine_pref: state.cuisine_pref || "none",
-      food_type: state.food_type
-    };
-
-    try {
-      const resp = await fetch(
-        "https://charm-care-health-ai-based-regimen.onrender.com/generate_plan",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!resp.ok) {
-        const errData = await resp.text();
-        console.error("Server Validation Error:", errData);
-        throw new Error("Backend error");
-      }
-
-      const data = await resp.json();
-      onResult(data);
-
-    } catch (err) {
-      console.error("Failed:", err);
-      alert("⚠️ Failed to fetch plan. Check backend logs.");
-    }
+  const payload = {
+    ...state,
+    calorie_target: null  // backend expects it
   };
+
+  try {
+    const resp = await fetch(
+      "https://charm-care-health-ai-based-regimen.onrender.com/generate_plan",
+      {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    const data = await resp.json();
+    if (!resp.ok) {
+      console.log("Backend returned:", data);
+      throw new Error("Backend rejected request");
+    }
+
+    onResult(data);
+  } catch (err) {
+    console.error("Failed:", err);
+    alert("⚠️ Failed to fetch plan.");
+  }
+};
+
 
   return (
     <form onSubmit={submit}>
