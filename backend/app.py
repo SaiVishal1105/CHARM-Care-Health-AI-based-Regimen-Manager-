@@ -218,7 +218,10 @@ def build_week_plan(user_input):
 # -------------------------------------------------
 @app.post("/generate_plan")
 def generate_plan(inp: UserInput):
-    return build_week_plan(inp.dict())
+    print("RAW INPUT:", inp)
+    print("AS DICT:", inp.model_dump())
+    return build_week_plan(inp.model_dump())
+
 
 
 # -------------------------------------------------
