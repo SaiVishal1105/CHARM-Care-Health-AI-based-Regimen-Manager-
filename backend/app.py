@@ -71,9 +71,10 @@ class UserInput(BaseModel):
     goal: str
     deficiency: str
     chronic: str
-    cuisine_pref: str | None = None
-    food_type: str | None = None
+    cuisine_pref: str = "none"
+    food_type: str = "none"
     calorie_target: float | None = None
+
 
 
 # -------------------------------------------------
