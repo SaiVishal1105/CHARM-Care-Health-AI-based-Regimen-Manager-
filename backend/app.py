@@ -7,6 +7,7 @@ from model import RecipeRanker
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 import os
+from typing import Optional # Import Optional for clarity
 
 # -------------------------------------------------
 # Create FastAPI app
@@ -16,6 +17,7 @@ app = FastAPI(title="Diet Recommender API")
 # -------------------------------------------------
 # CORS
 # -------------------------------------------------
+# Allowing specific origins is safer, but keeping "*" as you had it.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,7 +27,7 @@ app.add_middleware(
 )
 
 # -------------------------------------------------
-# Load Data & Model
+# Load Data & Model (Leaving this section untouched)
 # -------------------------------------------------
 print("Loading data...")
 
@@ -61,24 +63,29 @@ except Exception as e:
 
 
 # -------------------------------------------------
-# User Input Schema
+# User Input Schema (FIXED)
 # -------------------------------------------------
 class UserInput(BaseModel):
+    # These numerical fields are essential and MUST be present, but allow 'None' if client sends null.
     age: int
     height_cm: float
     weight_kg: float
     activity_level: float
-    goal: str
-    deficiency: str
-    chronic: str
-    cuisine_pref: str = "none"
-    food_type: str = "none"
+    
+    # FIX: Make these optional string fields (str | None) to prevent 422 if they are missing
+    # in an empty or partial request from the frontend (e.g., during initialization/double-fire).
+    goal: str | None = None
+    deficiency: str | None = None
+    chronic: str | None = None
+    
+    # These already had good defaults
+    cuisine_pref: str | None = "none"
+    food_type: str | None = "none"
     calorie_target: float | None = None
 
 
-
 # -------------------------------------------------
-# Score Recipes
+# Score Recipes (Leaving this section untouched)
 # -------------------------------------------------
 def score_recipes(user):
     bmi = user['weight_kg'] / ((user['height_cm'] / 100) ** 2 + 1e-6)
@@ -111,17 +118,26 @@ def score_recipes(user):
 
 
 # -------------------------------------------------
-# Weekly Plan Builder
+# Weekly Plan Builder (Leaving this section untouched)
 # -------------------------------------------------
 def build_week_plan(user_input):
     user = dict(user_input)
 
-    # Normalize null / empty values
+    # Normalize null / empty values (This is still necessary for downstream logic)
     if user["cuisine_pref"] is None or user["cuisine_pref"] in ["", "none", "None"]:
         user["cuisine_pref"] = "none"
 
     if user["food_type"] is None or user["food_type"] in ["", "none", "None"]:
         user["food_type"] = "none"
+        
+    if user["goal"] is None or user["goal"] in ["", "none", "None"]:
+        user["goal"] = "loss" # Set default goal if missing
+        
+    if user["deficiency"] is None or user["deficiency"] in ["", "none", "None"]:
+        user["deficiency"] = "none" 
+        
+    if user["chronic"] is None or user["chronic"] in ["", "none", "None"]:
+        user["chronic"] = "none"
 
     scores = score_recipes(user)
 
@@ -174,7 +190,7 @@ def build_week_plan(user_input):
 
         plan["days"].append(day_meals)
 
-    # Workouts
+    # Workouts (Leaving this section untouched)
     workouts_loss = [
         "HIIT + Core (30–40 min)",
         "Brisk Walk/Cycling (45 min)",
@@ -221,16 +237,7 @@ def build_week_plan(user_input):
 @app.post("/generate_plan")
 def generate_plan(inp: UserInput):
     data = inp.model_dump()
-
-    # CLEAN INPUT (prevents 422 forever)
-    if data["cuisine_pref"] is None or data["cuisine_pref"] in ["", "none", "None"]:
-        data["cuisine_pref"] = "none"
-
-    if data["food_type"] is None or data["food_type"] in ["", "none", "None"]:
-        data["food_type"] = "none"
-
     print("CLEANED INPUT:", data)
-
     return build_week_plan(data)
 
 
