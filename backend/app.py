@@ -123,11 +123,9 @@ def build_week_plan(user_input):
 
     # Normalize null / empty values (This logic is crucial after making fields optional)
     
-    # Handle missing numerical fields (this should only happen on the failed "ghost" request)
-    if user["age"] is None or user["height_cm"] is None or user["weight_kg"] is None or user["activity_level"] is None:
-         # If core data is missing, return an empty plan gracefully to avoid runtime errors
-         print("Warning: Essential numerical data missing. Returning empty plan.")
-         return {"plan": {"days": []}, "workout": []} 
+    # If activity_level is missing (None), default it to 1.2 (sedentary) instead of failing
+    if user["activity_level"] is None:
+         user["activity_level"] = 1.2
     
     # Normalize strings (even if set to default in Pydantic, check for None from the API)
     if user["cuisine_pref"] is None or user["cuisine_pref"] in ["", "None"]:
