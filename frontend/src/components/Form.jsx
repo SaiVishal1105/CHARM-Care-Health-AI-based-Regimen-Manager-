@@ -14,23 +14,22 @@ export default function Form({ onResult }) {
   });
 
   const submit = async (e) => {
-    e.preventDefault(); // 🚀 Prevent reload ALWAYS
+    e.preventDefault(); // stop reload & double-submit
 
-    // 🔥 Important: FastAPI expects "none" (string), NOT null.
     const payload = {
       age: Number(state.age),
       height_cm: Number(state.height_cm),
       weight_kg: Number(state.weight_kg),
       activity_level: Number(state.activity_level),
-      goal: state.goal.trim(),
-      deficiency: state.deficiency.trim(),
-      chronic: state.chronic.trim(),
-      cuisine_pref: state.cuisine_pref.trim(),   // always string
-      food_type: state.food_type.trim(),         // always string
+      goal: state.goal,
+      deficiency: state.deficiency,
+      chronic: state.chronic,
+      cuisine_pref: state.cuisine_pref,
+      food_type: state.food_type,
       calorie_target: null,
     };
 
-    console.log("FINAL PAYLOAD SENT:", payload);
+    console.log("PAYLOAD SENT:", payload);
 
     try {
       const resp = await fetch(
@@ -46,12 +45,9 @@ export default function Form({ onResult }) {
       );
 
       const data = await resp.json();
-      console.log("RESPONSE:", data);
+      console.log("RESPONSE RECEIVED:", data);
 
-      if (!resp.ok) {
-        console.error("Backend error object:", data);
-        throw new Error("Backend rejected request");
-      }
+      if (!resp.ok) throw new Error("Backend rejected request");
 
       onResult(data);
     } catch (err) {
@@ -163,9 +159,10 @@ export default function Form({ onResult }) {
         <option value="non-vegetarian">Non-Vegetarian</option>
       </select>
 
-      <button type="submit" onClick={(e) => e.stopPropagation()}>
-  Generate 7-day Plan
-</button>
+      {/* FIX: no onClick, proper submit */}
+      <button type="submit">
+        Generate 7-day Plan
+      </button>
     </form>
   );
 }
