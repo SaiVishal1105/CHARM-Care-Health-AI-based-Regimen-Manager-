@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 
 import numpy as np
 import torch
@@ -28,14 +28,14 @@ app = FastAPI(title="Diet Recommender API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with Vercel domain in production
+    allow_origins=["*"],           # replace with Vercel URL later
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ---------------------------
-# Paths & Globals
+# Globals
 # ---------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "model.pt")
@@ -50,8 +50,10 @@ model = None
 try:
     logger.info("Loading dataset…")
     df_global, enc_global, scaler_global, num_cols = load_and_process()
+
     recipe_features = df_global.filter(like="std_").values.astype("float32")
-    logger.info("Data loaded. Recipes: %d | Feature dim: %d",
+
+    logger.info("Data loaded. Recipes: %d | Features: %d",
                 len(df_global), recipe_features.shape[1])
 except Exception as e:
     logger.exception("DATA LOAD ERROR: %s", e)
@@ -65,16 +67,15 @@ try:
     user_dim = 4 + 3 + 4 + 3   # age,BMI,activity,calories + goal + deficiency + chronic
     recipe_dim = recipe_features.shape[1]
 
-    logger.info("Initializing model architecture…")
+    logger.info("Initializing model...")
     model = RecipeRanker(user_dim, recipe_dim)
 
     if os.path.exists(MODEL_PATH):
-        logger.info("Loading weights from %s", MODEL_PATH)
+        logger.info("Loading model weights...")
         model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
         model.eval()
-        logger.info("Model loaded.")
     else:
-        logger.warning("MODEL FILE NOT FOUND: %s", MODEL_PATH)
+        logger.warning("MODEL NOT FOUND: %s", MODEL_PATH)
         model = None
 
 except Exception as e:
@@ -99,9 +100,18 @@ class UserInput(BaseModel):
     calorie_target: Union[int, float, str, None] = None
 
 # ---------------------------
-# Helper Coercion
+# Utilities
 # ---------------------------
-def coerce_float(v: Any, default: float) -> float:
+def safe_get(row, col, default=""):
+    """Safely get a column from a row, even if missing."""
+    try:
+        if col in row and not (row[col] is None):
+            return row[col]
+    except Exception:
+        pass
+    return default
+
+def coerce_float(v, default):
     try:
         if v is None:
             return default
@@ -109,15 +119,13 @@ def coerce_float(v: Any, default: float) -> float:
     except:
         return default
 
-def clean_user_input(raw: Dict[str, Any]) -> Dict[str, Any]:
+def clean_user_input(raw):
     u = {}
-
     u["age"] = coerce_float(raw.get("age"), 23)
     u["height_cm"] = coerce_float(raw.get("height_cm"), 170)
     u["weight_kg"] = coerce_float(raw.get("weight_kg"), 70)
     u["activity_level"] = coerce_float(raw.get("activity_level"), 1.55)
 
-    # Normalize strings
     def norm(k, default="none"):
         v = raw.get(k, default)
         if v is None:
@@ -131,20 +139,21 @@ def clean_user_input(raw: Dict[str, Any]) -> Dict[str, Any]:
     u["cuisine_pref"] = norm("cuisine_pref", "none")
     u["food_type"] = norm("food_type", "none")
 
-    u["calorie_target"] = None
-    if raw.get("calorie_target"):
-        u["calorie_target"] = coerce_float(raw.get("calorie_target"), None)
+    u["calorie_target"] = (
+        coerce_float(raw["calorie_target"], None)
+        if raw.get("calorie_target") else None
+    )
 
     return u
 
 # ---------------------------
-# Scoring Function (improved)
+# Scoring
 # ---------------------------
-def score_recipes(user: Dict[str, Any]) -> np.ndarray:
-    if recipe_features is None or recipe_features.size == 0:
+def score_recipes(user):
+    if recipe_features is None or len(recipe_features) == 0:
         return np.zeros(1)
 
-    bmi = user["weight_kg"] / ((user["height_cm"] / 100) ** 2 + 1e-6)
+    bmi = user["weight_kg"] / ((user["height_cm"] / 100)**2 + 1e-6)
 
     user_vec = [
         user["age"] / 100,
@@ -165,45 +174,42 @@ def score_recipes(user: Dict[str, Any]) -> np.ndarray:
     rx = torch.tensor(recipe_features, dtype=torch.float32)
 
     if model is None:
-        return np.random.rand(len(recipe_features))
-
-    try:
-        with torch.no_grad():
-            raw_scores = model(uv, rx).numpy().reshape(-1)
-    except:
-        raw_scores = np.random.rand(len(recipe_features))
+        scores = np.random.rand(len(recipe_features))
+    else:
+        try:
+            with torch.no_grad():
+                scores = model(uv, rx).numpy().reshape(-1)
+        except:
+            scores = np.random.rand(len(recipe_features))
 
     df = df_global.copy()
-    scores = raw_scores.copy()
+    scores = scores.copy()
 
-    # Cuisine penalty
+    # penalties + bonuses
     if user["cuisine_pref"] != "none":
-        mismatch = df["cuisine"].str.lower() != user["cuisine_pref"]
-        scores[mismatch] *= 0.75
+        scores[df["cuisine"].str.lower() != user["cuisine_pref"]] *= 0.75
 
-    # Food type hard filter
     if user["food_type"] != "none":
-        mismatch = df["food_type"].str.lower() != user["food_type"]
-        scores[mismatch] *= 0.5
+        scores[df["food_type"].str.lower() != user["food_type"]] *= 0.5
 
-    # Deficiency bonus
     if user["deficiency"] == "iron":
         scores += df["iron_mg"].values * 0.02
     if user["deficiency"] == "protein":
         scores += df["protein_g"].values * 0.03
-
-    # Chronic disease penalty
     if user["chronic"] == "diabetes":
         scores -= df["carbs_g"].values * 0.01
+
+    # tiny randomness so two users don't get same plan every time
+    scores += np.random.normal(0, 0.0001, size=scores.shape)
 
     return scores
 
 # ---------------------------
 # Weekly Plan Builder
 # ---------------------------
-def build_week_plan(user: Dict[str, Any]) -> Dict[str, Any]:
+def build_week_plan(user):
     if df_global is None:
-        raise RuntimeError("Server data missing")
+        raise RuntimeError("Dataset not loaded")
 
     df = df_global.copy()
     df["score"] = score_recipes(user)
@@ -211,8 +217,9 @@ def build_week_plan(user: Dict[str, Any]) -> Dict[str, Any]:
     plan = {"days": []}
     used = set()
 
-    for day in range(7):
-        meals = {}
+    for _ in range(7):
+        day_meals = {}
+
         for meal in ["Breakfast", "Lunch", "Dinner"]:
             subset = df[df["meal_type"].str.lower() == meal.lower()].sort_values("score", ascending=False)
 
@@ -228,22 +235,22 @@ def build_week_plan(user: Dict[str, Any]) -> Dict[str, Any]:
             if chosen is not None:
                 used.add(chosen["recipe_name"])
 
-            meals[meal] = {
-                "recipe_name": chosen["recipe_name"] if chosen is not None else "",
-                "ingredients": chosen["ingredients"] if chosen is not None else "",
-                "instructions": chosen["instructions"] if chosen is not None else "",
-                "preparation": chosen["preparation"] if chosen is not None else "",
-                "calories": float(chosen["calories"]) if chosen is not None else 0,
-                "protein_g": float(chosen["protein_g"]) if chosen is not None else 0,
-                "carbs_g": float(chosen["carbs_g"]) if chosen is not None else 0,
-                "fat_g": float(chosen["fat_g"]) if chosen is not None else 0,
-                "iron_mg": float(chosen["iron_mg"]) if chosen is not None else 0,
-                "suitable_for_diabetes": bool(chosen["suitable_for_diabetes"]) if chosen is not None else False,
+            # safe extraction
+            day_meals[meal] = {
+                "recipe_name": safe_get(chosen, "recipe_name", ""),
+                "ingredients": safe_get(chosen, "ingredients", "Not provided."),
+                "instructions": safe_get(chosen, "instructions", "Instructions unavailable."),
+                "preparation": safe_get(chosen, "preparation", "Not provided."),
+                "calories": float(safe_get(chosen, "calories", 0)),
+                "protein_g": float(safe_get(chosen, "protein_g", 0)),
+                "carbs_g": float(safe_get(chosen, "carbs_g", 0)),
+                "fat_g": float(safe_get(chosen, "fat_g", 0)),
+                "iron_mg": float(safe_get(chosen, "iron_mg", 0)),
+                "suitable_for_diabetes": bool(safe_get(chosen, "suitable_for_diabetes", False)),
             }
 
-        plan["days"].append(meals)
+        plan["days"].append(day_meals)
 
-    # Workouts
     workouts = {
         "loss": [
             "HIIT + Core (30–40 min)",
@@ -300,8 +307,7 @@ def generate_plan(user_raw: UserInput):
         raise HTTPException(status_code=500, detail=str(e))
 
 # ---------------------------
-# Render Local Run
+# Local Render Run
 # ---------------------------
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
-
