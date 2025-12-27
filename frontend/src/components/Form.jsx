@@ -144,7 +144,7 @@ export default function Form({ onResult }) {
         </div>
       </div>
 
-      <label>Cuisine Preference</label>
+      <label>Cuisine Preference (Indian/Asian/European)</label>
       <input
         value={state.cuisine_pref}
         onChange={(e) =>
