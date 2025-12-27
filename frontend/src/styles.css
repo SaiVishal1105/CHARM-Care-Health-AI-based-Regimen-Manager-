@@ -219,3 +219,16 @@ button:active {
 .meal strong {
     color: var(--meal-strong);
 }
+.dev-names {
+    text-align: center;
+    margin-top: 6px;
+    font-weight: 500;
+    color: #0b6e4f;
+    opacity: 0.85;
+}
+
+.hero-devs {
+    margin-top: 10px;
+    font-size: 0.95rem;
+    color: #00796b;
+}
