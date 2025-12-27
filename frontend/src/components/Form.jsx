@@ -88,14 +88,18 @@ export default function Form({ onResult }) {
       </div>
 
       <label>Activity Level</label>
-      <input
-        type="number"
-        step="0.1"
+      <select
         value={state.activity_level}
-        onChange={(e) =>
-          setState({ ...state, activity_level: e.target.value })
+        onChange={e =>
+          setState({ ...state, activity_level: parseFloat(e.target.value) })
         }
-      />
+      >
+        <option value={1.2}>Sedentary (Little or no exercise)</option>
+        <option value={1.375}>Lightly Active (1–3 days/week)</option>
+        <option value={1.55}>Moderately Active (3–5 days/week)</option>
+        <option value={1.725}>Very Active (6–7 days/week)</option>
+        <option value={1.9}>Super Active (Athlete / Physical job)</option>
+      </select>
 
       <div className="row">
         <div className="col">
