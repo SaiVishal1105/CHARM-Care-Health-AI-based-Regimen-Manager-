@@ -40,6 +40,7 @@ app.add_middleware(
 # Load data & model
 # -------------------------------------------------
 DATA_PATH = "/mnt/data/healthy_recipes_augmented.xlsx"
+MODEL_PATH = "model.pt"
 df_global, enc_global, scaler_global, num_cols = load_and_process()
 
 recipe_features = df_global[
@@ -293,3 +294,4 @@ def generate_plan(inp: UserInput):
 # -----------------------
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
