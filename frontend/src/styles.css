@@ -22,9 +22,18 @@
     --meal-border: rgba(0, 150, 136, 0.25);
     --meal-strong: #00695c;
 
+    --workout-bg: rgba(77, 208, 225, 0.15);
+    --workout-hover: rgba(38, 166, 154, 0.2);
+    --workout-expanded-bg: rgba(255, 255, 255, 0.25);
+    --workout-card-bg: rgba(255, 255, 255, 0.35);
+    --workout-accent: #26a69a;
+    --workout-text: #004d40;
+
     --button-grad1: #4dd0e1;
     --button-grad2: #26a69a;
     --button-text: white;
+
+    --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
 /* =======================================
@@ -49,9 +58,18 @@ body[data-theme="dark"] {
     --meal-border: #26a69a;
     --meal-strong: #6fffd2;
 
+    --workout-bg: rgba(38, 166, 154, 0.15);
+    --workout-hover: rgba(77, 208, 225, 0.2);
+    --workout-expanded-bg: rgba(0, 40, 40, 0.3);
+    --workout-card-bg: rgba(0, 50, 50, 0.35);
+    --workout-accent: #4dd0e1;
+    --workout-text: #5efc82;
+
     --button-grad1: #26a69a;
     --button-grad2: #004d40;
     --button-text: white;
+
+    --shadow-color: rgba(0, 0, 0, 0.3);
 }
 
 /* Smooth theme transitions */
@@ -83,6 +101,38 @@ body {
     100% {
         background-position: -1200px 1200px;
     }
+}
+
+/* =======================================
+   THEME TOGGLE BUTTON
+======================================= */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--container-border);
+    background: var(--container-bg);
+    backdrop-filter: blur(10px);
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 15px var(--shadow-color);
+}
+
+.theme-toggle:hover {
+    transform: scale(1.15) rotate(15deg);
+    box-shadow: 0 6px 25px var(--container-glow);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
 }
 
 /* =======================================
@@ -130,6 +180,15 @@ h1 {
 
 h2 {
     color: var(--title-color);
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+h3 {
+    color: var(--title-color);
+    border-bottom: 3px solid var(--workout-accent);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 label {
@@ -189,17 +248,39 @@ button {
     cursor: pointer;
 
     margin-top: 16px;
+    width: 100%;
+    font-weight: 600;
+    font-size: 1.05rem;
 
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-button:hover {
+button:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 121, 107, 0.3);
 }
 
-button:active {
+button:active:not(:disabled) {
     transform: scale(0.98);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* =======================================
+   DAY CARD
+======================================= */
+.day-card {
+    background: var(--container-bg);
+    border: 1px solid var(--container-border);
+    backdrop-filter: blur(15px);
+    border-radius: 15px;
+    padding: 24px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 20px var(--shadow-color);
+    animation: fadeIn 0.8s ease;
 }
 
 /* =======================================
@@ -214,11 +295,367 @@ button:active {
 
     margin-bottom: 10px;
     animation: fadeIn 0.8s ease;
+    transition: all 0.3s ease;
+}
+
+.meal:hover {
+    transform: translateX(5px);
+    box-shadow: 0 3px 12px var(--shadow-color);
 }
 
 .meal strong {
     color: var(--meal-strong);
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 5px;
 }
+
+.meal-stats {
+    font-size: 0.9rem;
+    color: var(--text-main);
+    opacity: 0.8;
+    margin: 5px 0;
+}
+
+.meal p {
+    margin: 8px 0;
+    line-height: 1.5;
+    color: var(--text-main);
+}
+
+/* =======================================
+   ENHANCED WORKOUT DROPDOWN
+======================================= */
+.workout-section {
+    margin-top: 25px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    transition: all 0.3s ease;
+    background: var(--workout-bg);
+    backdrop-filter: blur(10px);
+}
+
+.workout-section:hover {
+    box-shadow: 0 6px 25px var(--container-glow);
+    transform: translateY(-2px);
+}
+
+.workout-header {
+    padding: 20px;
+    background: var(--workout-bg);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    border-left: 5px solid var(--workout-accent);
+}
+
+.workout-header:hover {
+    padding-left: 25px;
+    background: var(--workout-hover);
+}
+
+.workout-header strong {
+    font-size: 1.2rem;
+    color: var(--workout-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+}
+
+.workout-toggle-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: var(--workout-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.workout-toggle-icon.expanded {
+    transform: rotate(180deg);
+    background: var(--meal-strong);
+}
+
+.workout-header:hover .workout-toggle-icon {
+    transform: scale(1.1);
+}
+
+.workout-header:hover .workout-toggle-icon.expanded {
+    transform: rotate(180deg) scale(1.1);
+}
+
+.workout-details {
+    background: var(--workout-expanded-bg);
+    backdrop-filter: blur(10px);
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), padding 0.5s ease;
+    border-top: 2px solid transparent;
+}
+
+.workout-details.expanded {
+    max-height: 3000px;
+    padding: 25px;
+    border-top: 2px solid var(--workout-accent);
+    animation: fadeInSlide 0.5s ease;
+}
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.workout-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.workout-info-card {
+    background: var(--workout-card-bg);
+    backdrop-filter: blur(8px);
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid var(--workout-accent);
+    transition: all 0.3s ease;
+}
+
+.workout-info-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 3px 12px var(--shadow-color);
+}
+
+.workout-info-card strong {
+    display: block;
+    color: var(--workout-accent);
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.workout-info-card span {
+    color: var(--text-main);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.workout-main-section {
+    background: var(--meal-bg);
+    backdrop-filter: blur(8px);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border: 2px dashed var(--workout-accent);
+}
+
+.workout-main-section>strong {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    color: var(--workout-text);
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--workout-accent);
+}
+
+.workout-details ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.workout-details ul li {
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    background: var(--workout-card-bg);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    position: relative;
+    padding-left: 45px;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.workout-details ul li:hover {
+    background: var(--meal-bg);
+    border-left-color: var(--workout-accent);
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.workout-details ul li::before {
+    content: "✓";
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    background: var(--workout-accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.workout-notes {
+    margin-top: 20px;
+    padding: 18px;
+    background: var(--workout-card-bg);
+    backdrop-filter: blur(8px);
+    border-radius: 10px;
+    border-left: 5px solid #ffc107;
+    position: relative;
+    overflow: hidden;
+}
+
+.workout-notes::before {
+    content: "💡";
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 30px;
+    opacity: 0.3;
+}
+
+.workout-notes strong {
+    color: #f57c00;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+}
+
+.workout-notes span {
+    color: var(--text-main);
+    line-height: 1.6;
+    display: block;
+}
+
+.calories-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white;
+    border-radius: 25px;
+    font-weight: 600;
+    box-shadow: 0 3px 10px rgba(255, 107, 107, 0.3);
+    margin-top: 10px;
+}
+
+/* =======================================
+   DEVELOPER CREDITS
+======================================= */
+.dev-names {
+    text-align: center;
+    margin-top: 6px;
+    font-weight: 500;
+    color: var(--title-color);
+    opacity: 0.85;
+}
+
+.hero-devs {
+    margin-top: 10px;
+    font-size: 0.95rem;
+    color: var(--workout-accent);
+}
+
+/* =======================================
+   RESPONSIVE DESIGN
+======================================= */
+@media (max-width: 768px) {
+    .container {
+        margin: 20px;
+        padding: 20px;
+    }
+
+    .row {
+        flex-direction: column;
+    }
+
+    .theme-toggle {
+        top: 10px;
+        right: 10px;
+        width: 45px;
+        height: 45px;
+    }
+
+    .workout-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+}
+
+/* =======================================
+   LOADING STATE
+======================================= */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+button:disabled::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+}
+
+/* =======================================
+   REMOVE NUMBER INPUT SPINNERS
+======================================= */
+/* Chrome, Safari, Edge, Opera */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
 .dev-names {
     text-align: center;
     margin-top: 6px;

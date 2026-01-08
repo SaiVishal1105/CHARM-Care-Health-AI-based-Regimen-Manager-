@@ -1,60 +1,30 @@
-import React, { useState } from "react";
+import React, { useState } from 'react'
 
 export default function Form({ onResult }) {
   const [state, setState] = useState({
-    age: "23",
-    height_cm: "170",
-    weight_kg: "70",
-    activity_level: "1.55",
-    goal: "loss",
-    deficiency: "none",
-    chronic: "none",
-    cuisine_pref: "none",
-    food_type: "none",
-  });
+    age: 23,
+    height_cm: 170,
+    weight_kg: 70,
+    activity_level: 1.55,
+    goal: 'loss',
+    deficiency: 'none',
+    chronic: 'none',
+    cuisine_pref: '',
+    food_type: 'none'   // added correctly
+  })
 
   const submit = async (e) => {
-    e.preventDefault(); // stop reload & double-submit
+    e.preventDefault()
 
-    const payload = {
-      age: Number(state.age),
-      height_cm: Number(state.height_cm),
-      weight_kg: Number(state.weight_kg),
-      activity_level: Number(state.activity_level),
-      goal: state.goal,
-      deficiency: state.deficiency,
-      chronic: state.chronic,
-      cuisine_pref: state.cuisine_pref,
-      food_type: state.food_type,
-      calorie_target: null,
-    };
+    const resp = await fetch('http://localhost:8000/generate_plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    })
 
-    console.log("PAYLOAD SENT:", payload);
-
-    try {
-      const resp = await fetch(
-        "https://charm-care-health-ai-based-regimen.onrender.com/generate_plan",
-        {
-          method: "POST",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const data = await resp.json();
-      console.log("RESPONSE RECEIVED:", data);
-
-      if (!resp.ok) throw new Error("Backend rejected request");
-
-      onResult(data);
-    } catch (err) {
-      console.error("❌ FETCH FAILED:", err);
-      alert("⚠️ Failed to fetch plan. Check console.");
-    }
-  };
+    const data = await resp.json()
+    onResult(data)
+  }
 
   return (
     <form onSubmit={submit}>
@@ -64,7 +34,7 @@ export default function Form({ onResult }) {
           <input
             type="number"
             value={state.age}
-            onChange={(e) => setState({ ...state, age: e.target.value })}
+            onChange={e => setState({ ...state, age: parseInt(e.target.value) })}
           />
         </div>
 
@@ -73,7 +43,7 @@ export default function Form({ onResult }) {
           <input
             type="number"
             value={state.height_cm}
-            onChange={(e) => setState({ ...state, height_cm: e.target.value })}
+            onChange={e => setState({ ...state, height_cm: parseFloat(e.target.value) })}
           />
         </div>
 
@@ -82,45 +52,69 @@ export default function Form({ onResult }) {
           <input
             type="number"
             value={state.weight_kg}
-            onChange={(e) => setState({ ...state, weight_kg: e.target.value })}
+            onChange={e => setState({ ...state, weight_kg: parseFloat(e.target.value) })}
           />
         </div>
       </div>
 
       <label>Activity Level</label>
-      <select
+      <input
+        type="number"
+        step="0.5"
         value={state.activity_level}
-        onChange={e =>
-          setState({ ...state, activity_level: parseFloat(e.target.value) })
-        }
-      >
-        <option value={1.2}>Sedentary (Little or no exercise)</option>
-        <option value={1.375}>Lightly Active (1–3 days/week)</option>
-        <option value={1.55}>Moderately Active (3–5 days/week)</option>
-        <option value={1.725}>Very Active (6–7 days/week)</option>
-        <option value={1.9}>Super Active (Athlete / Physical job)</option>
-      </select>
+        onChange={e => setState({ ...state, activity_level: parseFloat(e.target.value) })}
+      />
 
       <div className="row">
         <div className="col">
           <label>Goal</label>
           <select
             value={state.goal}
-            onChange={(e) => setState({ ...state, goal: e.target.value })}
+            onChange={e => setState({ ...state, goal: e.target.value })}
           >
-            <option value="loss">Weight Loss</option>
-            <option value="gain">Weight Gain</option>
-            <option value="muscle">Muscle Gain</option>
+            <option value={1.2}>🛋️ Sedentary - Little or no exercise</option>
+            <option value={1.375}>🚶 Lightly Active - Exercise 1-3 days/week</option>
+            <option value={1.55}>🏃 Moderately Active - Exercise 3-5 days/week</option>
+            <option value={1.725}>🏋️ Very Active - Exercise 6-7 days/week</option>
+            <option value={1.9}>🔥 Super Active - Athlete / Physical job</option>
           </select>
+
+          <div style={{ marginTop: 15 }}>
+            <label>Fitness Goal</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+              {['loss', 'gain', 'muscle'].map(goal => {
+                const info = getGoalInfo(goal)
+                return (
+                  <div
+                    key={goal}
+                    onClick={() => setState({ ...state, goal })}
+                    style={{
+                      padding: 15,
+                      borderRadius: 10,
+                      border: state.goal === goal ? '3px solid var(--workout-accent)' : '2px solid var(--input-border)',
+                      background: state.goal === goal ? 'var(--workout-bg)' : 'var(--input-bg)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.3s ease',
+                      backdropFilter: 'blur(5px)',
+                      transform: state.goal === goal ? 'scale(1.05)' : 'scale(1)'
+                    }}
+                  >
+                    <div style={{ fontSize: '2rem', marginBottom: 5 }}>{info.emoji}</div>
+                    <strong style={{ display: 'block', color: 'var(--text-main)' }}>{info.text}</strong>
+                    <small style={{ color: 'var(--text-main)', opacity: 0.7 }}>{info.desc}</small>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="col">
           <label>Deficiency</label>
           <select
             value={state.deficiency}
-            onChange={(e) =>
-              setState({ ...state, deficiency: e.target.value })
-            }
+            onChange={e => setState({ ...state, deficiency: e.target.value })}
           >
             <option value="none">None</option>
             <option value="iron">Iron</option>
@@ -133,9 +127,7 @@ export default function Form({ onResult }) {
           <label>Chronic</label>
           <select
             value={state.chronic}
-            onChange={(e) =>
-              setState({ ...state, chronic: e.target.value })
-            }
+            onChange={e => setState({ ...state, chronic: e.target.value })}
           >
             <option value="none">None</option>
             <option value="diabetes">Diabetes</option>
@@ -144,12 +136,10 @@ export default function Form({ onResult }) {
         </div>
       </div>
 
-      <label>Cuisine Preference (Indian/Asian/European)</label>
+      <label>Cuisine Preference</label>
       <input
         value={state.cuisine_pref}
-        onChange={(e) =>
-          setState({ ...state, cuisine_pref: e.target.value })
-        }
+        onChange={e => setState({ ...state, cuisine_pref: e.target.value })}
       />
 
       <label>Food Type</label>
@@ -157,16 +147,13 @@ export default function Form({ onResult }) {
         value={state.food_type}
         onChange={(e) => setState({ ...state, food_type: e.target.value })}
       >
-        <option value="none">No Preference</option>
-        <option value="vegetarian">Vegetarian</option>
-        <option value="vegan">Vegan</option>
-        <option value="non-vegetarian">Non-Vegetarian</option>
+        <option value="None">No Preference</option>
+        <option value="Vegetarian">Vegetarian</option>
+        <option value="Vegan">Vegan</option>
+        <option value="Non-Vegetarian">Non-Vegetarian</option>
       </select>
 
-      {/* FIX: no onClick, proper submit */}
-      <button type="submit">
-        Generate 7-day Plan
-      </button>
+      <button type="submit">Generate 7-day Plan</button>
     </form>
-  );
+  )
 }
