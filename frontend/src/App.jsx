@@ -32,6 +32,5 @@ export default function App() {
       <Form onResult={setPlan} />
       {plan && <Plan data={plan} />}
     </div>
-    </>
   )
 }
