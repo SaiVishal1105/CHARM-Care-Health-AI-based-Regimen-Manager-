@@ -274,24 +274,47 @@ def build_week_plan(user_input):
 # -----------------------
 # Endpoints
 # -----------------------
-@app.get("/health")
-def health():
+# -------------------------------------------------
+# ROOT ENDPOINT
+# -------------------------------------------------
+@app.get("/")
+def root():
     return {
-        "status": "ok",
-        "data_loaded": df_global is not None,
+        "status": "running",
+        "service": "CHARM Diet Recommender API",
         "model_loaded": model is not None,
-        "recipes": len(df_global) if df_global is not None else 0,
-        "recipe_dim": recipe_features.shape[1] if recipe_features is not None else 0,
+        "num_recipes": len(df_global),
+        "cuisines": all_cuisines,
+        "version": "2.0"
     }
 
+# -------------------------------------------------
+# DEBUG ENDPOINT
+# -------------------------------------------------
+@app.get("/debug/food_types")
+def debug_food_types():
+    """Check what food_type values exist in the dataset"""
+    if 'food_type' in df_global.columns:
+        food_types = df_global['food_type'].value_counts().to_dict()
+        return {
+            "has_food_type_column": True,
+            "food_types": food_types,
+            "sample_recipes": df_global[['recipe_name', 'food_type']].head(10).to_dict('records')
+        }
+    else:
+        return {
+            "has_food_type_column": False,
+            "available_columns": list(df_global.columns),
+            "message": "food_type column not found in dataset"
+        }
+
+# -------------------------------------------------
+# GENERATE PLAN ENDPOINT
+# -------------------------------------------------
 @app.post("/generate_plan")
 def generate_plan(inp: UserInput):
-    return build_week_plan(inp.dict())
-
-
-# -----------------------
-# Local Run
-# -----------------------
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
+    try:
+        return build_week_plan(inp.dict())
+    except Exception as e:
+        print(f"Error in generate_plan: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating plan: {str(e)}")
